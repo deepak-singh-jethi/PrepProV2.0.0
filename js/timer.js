@@ -234,10 +234,7 @@ export const timerOps = {
  updateGlobalTimerUI: () => {
     const app = getApp();
     
-     if (!app.data.user) {
-    hideTimerUI();
-    return;
-  }
+     
     const bar = document.getElementById("globalTimerBar");
     if (!bar) return;
     
