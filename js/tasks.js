@@ -327,25 +327,51 @@ export const taskOps = {
     const dateToUse = task.date || formatDate(new Date());
     taskOps.openTaskModal(dateToUse, id);
   },
-  populateEditForm: id => {
+populateEditForm: id => {
     const app = getApp();
     const task = app.data.tasks.find(t => t.id === id);
     if (!task) return;
+    
     document.getElementById("taskEditId").value = task.id;
     document.getElementById("formModeTitle").innerHTML = '<span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span> Edit Mode';
     document.getElementById("cancelEditBtn").classList.remove("hidden");
-    document.getElementById("saveTaskBtn").innerText = "Update Task";
-    document.getElementById("saveTaskBtn").classList.add("bg-gray-800", "hover:bg-black");
+    
+    const saveBtn = document.getElementById("saveTaskBtn");
+    saveBtn.innerText = "Update Task";
+    saveBtn.classList.add("bg-gray-800", "hover:bg-black");
+    
+    // Set Subject
     const subObj = app.data.subjects.find(s => s.name === task.subject);
     const subSelect = document.getElementById("taskSubject");
     if (subObj) subSelect.value = subObj.id;
-    taskOps.updateSubSubjects();
-    document.getElementById("taskSubSubject").value = task.subSubject;
+    
+    // Update list to populate the Topic Select
+    taskOps.updateSubSubjects(); 
+
+    // Set Topic Value (Must happen AFTER updateSubSubjects populates the options)
+    const topicSelect = document.getElementById("taskSubSubject");
+    if (topicSelect) {
+        // Check if the task's topic still exists in the subject list
+        const topicExists = Array.from(topicSelect.options).some(opt => opt.value === task.subSubject);
+        
+        if (!topicExists) {
+            // Edge Case: Logic for legacy tasks where the topic was deleted from Subject list
+            // We create a temporary option so the UI doesn't break
+            const tempOpt = document.createElement("option");
+            tempOpt.value = task.subSubject;
+            tempOpt.text = task.subSubject + " (Archived)";
+            topicSelect.appendChild(tempOpt);
+        }
+        topicSelect.value = task.subSubject;
+    }
+
     document.getElementById("taskDuration").value = task.duration;
     document.getElementById("taskDesc").value = task.desc || "";
+    
     taskOps.toggleMobileTaskView('form');
-  },
-  resetForm: () => {
+},
+
+resetForm: () => {
     document.getElementById("taskEditId").value = "";
     document.getElementById("formModeTitle").innerHTML = '<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span> Plan New Task';
     document.getElementById("cancelEditBtn").classList.add("hidden");
@@ -355,23 +381,59 @@ export const taskOps = {
     document.getElementById("taskSubSubject").value = "";
     document.getElementById("taskDuration").value = "";
     document.getElementById("taskDesc").value = "";
+    
+    taskOps.updateSubSubjects();
   },
-  updateSubSubjects: () => {
+
+updateSubSubjects: () => {
     const app = getApp();
     const subId = document.getElementById("taskSubject").value;
-    const dataList = document.getElementById("subSubjectList");
-    dataList.innerHTML = "";
-    if (subId) {
-      const subject = app.data.subjects.find(s => s.id == subId);
-      if (subject && subject.sub) {
-        subject.sub.forEach(topic => {
-          const option = document.createElement("option");
-          option.value = topic;
-          dataList.appendChild(option);
-        });
-      }
+    const topicSelect = document.getElementById("taskSubSubject");
+    
+    // 1. Clear existing options
+    topicSelect.innerHTML = "";
+
+    // 2. Handle Empty State
+    if (!subId) {
+        const defaultOpt = document.createElement("option");
+        defaultOpt.value = "";
+        defaultOpt.text = "Select Subject First";
+        topicSelect.appendChild(defaultOpt);
+        topicSelect.disabled = true;
+        return;
     }
-  },
+
+    // 3. Find Subject Data
+    const subject = app.data.subjects.find(s => s.id == subId);
+    
+    // 4. Populate Topics
+    if (subject && subject.sub && subject.sub.length > 0) {
+        topicSelect.disabled = false;
+        
+        // Add Placeholder
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.text = "Select a Topic...";
+        topicSelect.appendChild(placeholder);
+
+        // Sort and Add Topics
+        const sortedTopics = [...subject.sub].sort((a, b) => a.localeCompare(b));
+        
+        sortedTopics.forEach(topic => {
+            const option = document.createElement("option");
+            option.value = topic;
+            option.text = topic;
+            topicSelect.appendChild(option);
+        });
+    } else {
+        // Handle case where Subject has no topics defined
+        const noData = document.createElement("option");
+        noData.value = "";
+        noData.text = "(No topics defined - Go to Subjects tab)";
+        topicSelect.appendChild(noData);
+        topicSelect.disabled = true; 
+    }
+},
   saveTask: e => {
     e.preventDefault();
     const app = getApp();

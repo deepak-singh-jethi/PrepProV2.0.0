@@ -809,6 +809,22 @@ focusEl.innerHTML = `
       list.insertAdjacentHTML("beforeend", html);
     });
   },
+
+  jumpToSubjectManager() {
+    const subSelect = document.getElementById("taskSubject");
+    const selectedSubId = subSelect ? subSelect.value : null;
+
+    this.closeTaskModal();
+    this.navigate('subjects');
+
+    if (selectedSubId) {
+        setTimeout(() => {
+            if (window.subjActions && window.subjActions.openFocus) {
+                window.subjActions.openFocus(selectedSubId);
+            }
+        }, 300);
+    }
+},
   openSubjectModal() {
     document.getElementById("subjectModal").classList.remove("hidden");
   },
