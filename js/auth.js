@@ -151,8 +151,19 @@ export const authOps = {
       await uiAlert(`Signup Failed: ${error.message}`);
     }
   },
-  logout: async () => {
+ logout: async () => {
     try {
+  
+      if (window.app) {
+        if (window.app.data.activeTimer) {
+          window.app.stopTimer(true);
+        }
+        if (window.app._renderTimer) {
+          clearTimeout(window.app._renderTimer);
+          window.app._renderTimer = null;
+        }
+      }
+
       await signOut(auth);
       window.app.resetState();
       clearCurrentSession();

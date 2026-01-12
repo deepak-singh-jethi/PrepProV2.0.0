@@ -216,7 +216,14 @@ window.app = {
       this.navigate("landing");
     }
   },
-  resetState() {
+ resetState() {
+
+    if (this._renderTimer) {
+      clearTimeout(this._renderTimer);
+      this._renderTimer = null;
+    }
+
+
     if (this.data.timerInterval) {
       clearInterval(this.data.timerInterval);
     }

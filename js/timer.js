@@ -231,12 +231,22 @@ export const timerOps = {
     }
     app.render();
   },
-  updateGlobalTimerUI: () => {
+ updateGlobalTimerUI: () => {
     const app = getApp();
     const bar = document.getElementById("globalTimerBar");
     if (!bar) return;
+    
+ 
+    if (!app.data.user || app.data.currentView === 'landing') {
+      bar.classList.add("translate-y-full", "hidden"); 
+      bar.onclick = null;
+      bar.style.cursor = "default";
+      return;
+    }
+
+
     if (app.data.activeTimer) {
-      bar.classList.remove("translate-y-full");
+      bar.classList.remove("translate-y-full", "hidden"); 
       bar.onclick = e => {
         if (e.target.closest("button")) return;
         timerOps.toggleZenMode(true);
@@ -249,7 +259,7 @@ export const timerOps = {
       } else {
         app.data.activeTimer = null;
         timerOps.persistTimerState();
-        bar.classList.add("translate-y-full");
+        bar.classList.add("translate-y-full"); 
         return;
       }
       const isRunning = app.data.activeTimer.startTime !== null;
