@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>PrepPro v2.1.0</title>
+    <meta name="description" content="PrepMaster - Study Planner & Task Manager for Competitive Exams">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+<script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                    mono: ['JetBrains Mono', 'monospace'],
+                },
+                colors: {
+                    primary: {
+                        DEFAULT: '#4F46E5',
+                        50: '#EEF2FF',
+                        100: '#E0E7FF',
+                        600: '#4F46E5',
+                        700: '#4338CA',
+                    },
+                    secondary: {
+                        DEFAULT: '#10B981',
+                        50: '#ECFDF5',
+                        600: '#059669',
+                    },
+                    gray: {
+                        50: '#F8FAFC',
+                        100: '#F1F5F9',
+                        200: '#CBD5E1',
+                        300: '#94A3B8',
+                        400: '#64748B',
+                        500: '#475569',
+                        600: '#334155',
+                        700: '#374151',
+                        800: '#1F2937',
+                        900: '#111827',
+                    },
+                    accent: '#F59E0B',
+                    danger: '#EF4444',
+                    dark: {
+                        DEFAULT: '#111827',
+                        bg: '#0B0F19',
+                        surface: '#1F2937',
+                        border: '#374151'
+                    },
+                    light: '#F3F4F6'
+                },
+                boxShadow: {
+                    'soft': '0 2px 8px -2px rgba(0, 0, 0, 0.08), 0 4px 16px -4px rgba(0, 0, 0, 0.04)',
+                    'glow': '0 0 15px rgba(79, 70, 229, 0.3)'
+                },
+                animation: {
+                    'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                }
+            }
+        }
+    }
+</script>
+<script>
+    (function() {
+        const stored = localStorage.getItem('theme');
+        const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (stored === 'dark' || (!stored && sysDark)) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+        } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+        }
+    })();
+</script>
+<style>
+    /* FIX 2: Safe Area Utilities for Mobile */
+    .pt-safe { padding-top: env(safe-area-inset-top); }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+    .min-h-safe { min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+    
+    /* Fix for mobile keyboard pushing content up awkwardly */
+    @media (max-width: 640px) {
+        body { height: 100dvh; }
+    }
+
+    html { scrollbar-gutter: stable; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+    
+    .dark ::-webkit-scrollbar-thumb { background: #374151; }
+    .dark ::-webkit-scrollbar-thumb:hover { background: #4B5563; }
+    
+    .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    .dark .glass { background: rgba(17, 24, 39, 0.95); }
+    .modal { background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); }
+    
+    input:focus, select:focus, textarea:focus { 
+        outline: none; 
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); 
+        border-color: #4F46E5; 
+    }
+
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.75rem; }
+    @media (max-width: 640px) {
+        .calendar-grid { gap: 0.25rem; }
+    }
+
+
+    html:not(.dark) #calendarGrid > div {
+        border-color: #CBD5E1 !important;
+    }
+
+    .text-xxs { font-size: 0.65rem; line-height: 1rem; }
+    .bg-pattern { background-image: radial-gradient(#4F46E5 0.5px, transparent 0.5px); background-size: 10px 10px; opacity: 0.05; }
+  
+
+    #dashQuickActions .shadow-glow { box-shadow: 0 8px 30px rgba(79,70,229,0.12); }
+    #dashMiniBacklogCount { min-width: 22px; text-align:center; display:inline-block; }
+    #dashBacklogMiniList .truncate { max-width: 26rem; }
+    @media (max-width: 640px) {
+      #dashQuickActions .hidden.sm\:inline-flex { display:none !important; }
+    }
+
+    
+    @keyframes moveStripes {
+        0% { background-position: 0 0; }
+        100% { background-position: 30px 30px; }
+    }
+
+    .animate-stripes {
+        background-image: linear-gradient(
+            45deg, 
+            rgba(255, 255, 255, 0.03) 25%, 
+            transparent 25%, 
+            transparent 50%, 
+            rgba(255, 255, 255, 0.03) 50%, 
+            rgba(255, 255, 255, 0.03) 75%, 
+            transparent 75%, 
+            transparent
+        );
+        background-size: 30px 30px;
+        animation: moveStripes 1s linear infinite;
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    @keyframes breatheAmber {
+        0%, 100% { 
+            border-color: rgba(245, 158, 11, 0.3); 
+            box-shadow: 0 0 0 rgba(245, 158, 11, 0);
+        }
+        50% { 
+            border-color: rgba(245, 158, 11, 1);   
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); 
+        }
+    }
+
+    .overtime-warning {
+        animation: breatheAmber 3s infinite ease-in-out;
+        background-color: rgba(255, 251, 235, 0.5); 
+    }
+    .dark .overtime-warning {
+        background-color: rgba(69, 26, 3, 0.2); 
+    }
+
+    .day-cell-base {
+        position: relative;
+        background: #1e293b !important; 
+        border: 1px solid #334155 !important; 
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        transition: all 0.2s ease;
+        overflow: hidden;
+    }
+    .day-cell-base:hover {
+        border-color: #94a3b8 !important; 
+        transform: translateY(-2px);
+        z-index: 10;
+    }
+
+    .heat-past-empty {
+        background: #0f172a !important; 
+        border: 1px dashed #475569 !important; 
+        opacity: 0.7;
+    }
+
+    .heat-past-empty::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: repeating-linear-gradient(
+            45deg,
+            rgba(255, 255, 255, 0.03) 0px,
+            rgba(255, 255, 255, 0.03) 2px,
+            transparent 2px,
+            transparent 8px
+        );
+    }
+
+    .heat-missed {
+        background: rgba(69, 10, 10, 0.6) !important; 
+        border: 1px solid #ef4444 !important; 
+    }
+
+    .heat-low {
+        background: rgba(6, 78, 59, 0.4) !important; 
+        border: 1px solid #059669 !important;
+    }
+
+    .heat-med {
+        background: rgba(5, 150, 105, 0.5) !important;
+        border: 1px solid #34d399 !important;
+    }
+
+    .heat-high {
+        background: rgba(16, 185, 129, 0.6) !important;
+        border: 1px solid #6ee7b7 !important;
+    }
+
+    .heat-perfect {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.8), rgba(4, 120, 87, 0.9)) !important;
+        border: 1px solid #a7f3d0 !important;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    }
+
+    .text-dim { color: #94a3b8; font-size: 0.65rem; font-weight: 600; }
+    .text-active { color: #f1f5f9; font-weight: 800; }
+    .text-pct-missed { color: #fca5a5; } 
+    .text-pct-progress { color: #6ee7b7; } 
+
+    .heat-high .text-slate-500, 
+    .heat-perfect .text-slate-500 {
+        color: rgba(255, 255, 255, 0.95) !important; 
+    }
+
+    .heat-high .text-pct-progress,
+    .heat-perfect .text-pct-progress {
+        color: #ffffff !important; 
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2); 
+    }
+
+    .heat-high .border-t, 
+    .heat-perfect .border-t {
+        border-color: rgba(255, 255, 255, 0.2) !important; 
+    }
+
+    .heat-missed .text-slate-500 {
+        color: rgba(255, 200, 200, 0.8) !important;
+    }
+    .heat-missed .text-pct-missed {
+        color: #ffffff !important;
+        font-weight: 800;
+    }
+    @media (max-width: 768px) {
+        body {
+            overflow-x: hidden; 
+        }
+        .flex-1 {
+            min-width: 0; 
+        }
+        #dayManagerList > div, 
+        #dashRemainingList > div {
+            margin-bottom: 0.5rem; 
+        }
+        .modal > div {
+            max-height: 90vh;
+        }
+        .calendar-grid {
+            gap: 2px !important;
+        }
+        .day-cell-base {
+            padding: 4px !important;
+            height: 5rem !important; 
+        }
+    }
+</style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-dark-bg dark:text-gray-100 transition-colors duration-200 h-[100dvh] w-screen flex flex-col overflow-hidden font-sans antialiased selection:bg-primary-100 dark:selection:bg-primary-700/30 supports-[height:100cqh]:h-[100cqh] supports-[height:100svh]:h-[100svh]">
+<div id="app-loading-screen" class="fixed inset-0 z-[100] bg-white dark:bg-gray-900 flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4 animate-bounce">
+            <i class="fas fa-layer-group text-3xl"></i>
+        </div>
+        <div class="text-gray-400 text-xs font-bold uppercase tracking-widest animate-pulse">Loading PrepMaster...</div>
+    </div>
+ <header id="mainHeader" class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 shrink-0 z-20 hidden pt-safe">
+    <div class="px-3 md:px-6 h-14 md:h-16 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2.5 group cursor-default">
+                <div class="w-8 h-8 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <i class="fas fa-layer-group text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold tracking-tight leading-none">Prep<span class="text-primary">Pro</span></h1>
+                    <span class="text-[10px] font-mono font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">v2.1.0</span>
+                </div>
+            </div>
+            
+            <div class="hidden md:block h-8 w-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
+
+            <div class="hidden md:flex items-center gap-6">
+                <div class="flex flex-col cursor-pointer group" onclick="app.editTargetDate()" title="Edit Target Date">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-gray-400 group-hover:text-primary transition-colors">Target</span>
+                    <span id="targetDateDisplay" class="text-xs font-semibold text-gray-700 dark:text-gray-200">Loading...</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-gray-400">Time Left</span>
+                    <span class="text-xs font-mono font-bold text-danger" id="countdownTimer">--</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 md:gap-5">
+            <div class="text-right hidden sm:block">
+                <div class="text-xs font-bold text-secondary flex items-center justify-end gap-1.5" id="streakDisplay">
+                    <i class="fas fa-fire"></i> 0 Days
+                </div>
+                <div class="text-[10px] font-medium text-gray-400 mt-0.5" id="currentDateDisplay"></div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="app.openSettings()" class="relative p-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors text-gray-500 dark:text-gray-400 group" aria-label="Settings">
+                    <i class="fas fa-cog group-hover:rotate-90 transition-transform duration-500"></i>
+                    <span id="backupWarningDot" class="hidden absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-800"></span>
+                </button>
+                <button onclick="app.toggleTheme()" class="p-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors text-gray-500 dark:text-yellow-400" aria-label="Toggle Theme">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:inline"></i>
+                </button>
+                <button id="navLoginBtn" onclick="document.getElementById('authModal').classList.remove('hidden')" class="bg-primary text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary/20">
+    <i class="fas fa-sign-in-alt mr-1"></i> Login
+</button>
+
+<div id="navUserProfile" class="hidden flex items-center gap-2 cursor-pointer group relative">
+    <div class="text-right hidden sm:block">
+        <div id="navUserName" class="text-xs font-bold text-gray-800 dark:text-gray-200">User</div>
+        <div class="text-[9px] text-gray-400 font-medium cursor-pointer hover:text-red-500" onclick="app.logout()">Logout</div>
+    </div>
+    <img id="navUserImg" src="" alt="User Profile" class="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700" width="32" height="32">
+    
+    <button onclick="app.logout()" class="sm:hidden p-2 text-gray-400 hover:text-red-500 transition-colors" aria-label="Logout">
+        <i class="fas fa-sign-out-alt"></i>
+    </button>
+</div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="flex flex-1 overflow-hidden relative">
+    
+   <aside id="mainSidebar" class="fixed bottom-0 left-0 w-full h-16 z-50 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-row justify-between items-center transition-all duration-300 hidden pb-safe
+    md:w-64 md:relative md:h-auto md:border-t-0 md:border-r md:flex-col md:justify-between md:items-stretch md:z-10 md:pb-0
+">
+    <div class="md:hidden flex flex-col justify-center pl-4 pr-2 cursor-pointer border-r border-gray-100 dark:border-gray-700/50 mr-1" onclick="app.editTargetDate()">
+        <span class="text-[8px] font-bold uppercase text-gray-400 tracking-wider">Target</span>
+        <div class="flex items-baseline gap-1.5">
+            <span id="mobileCountdownTimer" class="text-xs font-mono font-bold text-danger">--</span>
+            <span id="mobileTargetDisplay" class="text-[10px] font-semibold text-gray-600 dark:text-gray-300">...</span>
+        </div>
+    </div>
+
+    <nav class="
+        flex flex-row items-center justify-around flex-1 h-full px-1
+        md:flex-col md:py-6 md:gap-2 md:px-3 md:justify-start md:h-auto md:w-auto
+    ">
+        <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="nav-item group flex flex-col items-center justify-center p-1 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 md:flex-row md:px-3 md:py-3 md:rounded-xl md:justify-start">
+            <div class="flex justify-center md:w-8"><i class="fas fa-home text-lg transition-transform group-hover:scale-110"></i></div>
+            <span class="text-[10px] font-medium mt-1 md:mt-0 md:ml-3 md:text-sm tracking-wide block">Dashboard</span>
+        </button>
+        <button onclick="app.navigate('calendar')" id="nav-calendar" class="nav-item group flex flex-col items-center justify-center p-1 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 md:flex-row md:px-3 md:py-3 md:rounded-xl md:justify-start">
+            <div class="flex justify-center md:w-8"><i class="fas fa-calendar-alt text-lg transition-transform group-hover:scale-110"></i></div>
+            <span class="text-[10px] font-medium mt-1 md:mt-0 md:ml-3 md:text-sm tracking-wide block">Calendar</span>
+        </button>
+        <button onclick="app.navigate('subjects')" id="nav-subjects" class="nav-item group flex flex-col items-center justify-center p-1 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 md:flex-row md:px-3 md:py-3 md:rounded-xl md:justify-start">
+            <div class="flex justify-center md:w-8"><i class="fas fa-book text-lg transition-transform group-hover:scale-110"></i></div>
+            <span class="text-[10px] font-medium mt-1 md:mt-0 md:ml-3 md:text-sm tracking-wide block">Subjects</span>
+        </button>
+        <button onclick="app.navigate('analytics')" id="nav-analytics" class="nav-item group flex flex-col items-center justify-center p-1 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 md:flex-row md:px-3 md:py-3 md:rounded-xl md:justify-start">
+            <div class="flex justify-center md:w-8"><i class="fas fa-chart-pie text-lg transition-transform group-hover:scale-110"></i></div>
+            <span class="text-[10px] font-medium mt-1 md:mt-0 md:ml-3 md:text-sm tracking-wide block">Analytics</span>
+        </button>
+    </nav>
+    
+    <div class="hidden md:block p-4 border-t border-gray-200 dark:border-gray-700 pb-20 md:pb-6">
+        <div class="flex items-center justify-between mb-3 cursor-pointer group" onclick="app.navigate('dashboard')">
+            <h3 class="text-xs font-bold text-gray-400 uppercase hidden md:block tracking-widest group-hover:text-primary transition-colors">Backlog</h3>
+            <span id="backlogCount" class="hidden bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold shadow-sm min-w-[20px] text-center">0</span>
+        </div>
+        <div id="sidebarBacklogList" class="hidden md:block overflow-y-auto max-h-32 space-y-1.5 pr-1"></div>
+    </div>
+</aside>
+
+  <main id="mainContent" class="flex-1 overflow-y-auto bg-gray-50 dark:bg-dark-bg p-2 md:p-8 lg:p-10 pb-40 md:pb-32 scroll-smooth">
+        <div id="view-landing" class="view-section min-h-screen flex flex-col items-center justify-center p-4 -mt-16">
+    
+    <div class="text-center mb-8 animate-fade-in">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 text-primary mb-4 shadow-lg shadow-primary/20">
+            <i class="fas fa-layer-group text-3xl"></i>
+        </div>
+        <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">Prep<span class="text-primary">Master</span></h1>
+        <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Your strategic command center for exam success.</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-8 border border-gray-100 dark:border-gray-700 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-indigo-500"></div>
+
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 text-center">Welcome Back</h3>
+
+        <button onclick="app.loginGoogle()" class="w-full py-3.5 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center justify-center gap-3 mb-6 group bg-white dark:bg-gray-900">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Sign in with Google">
+            <span class="font-bold text-sm text-gray-700 dark:text-gray-200 group-hover:text-black dark:group-hover:text-white">Continue with Google</span>
+        </button>
+
+        <div class="relative flex py-2 items-center mb-6">
+            <div class="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
+            <span class="flex-shrink-0 mx-4 text-[10px] text-gray-400 uppercase tracking-widest font-bold">Or</span>
+            <div class="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
+        </div>
+
+        <form onsubmit="event.preventDefault(); app.handleEmailAuth(event);" class="space-y-4">
+            <input type="email" name="email" placeholder="Email Address" required class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-primary outline-none font-medium">
+            <input type="password" name="password" placeholder="Password" required class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-primary outline-none font-medium">
+            
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <button type="submit" onclick="this.form.dataset.action='login'" class="py-3 bg-primary text-white rounded-xl font-bold text-xs hover:bg-primary-700 transition-colors shadow-lg shadow-primary/25">Log In</button>
+                <button type="submit" onclick="this.form.dataset.action='register'" class="py-3 bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-300 rounded-xl font-bold text-xs hover:bg-indigo-100 transition-colors">Sign Up</button>
+            </div>
+        </form>
+    </div>
+
+    <p class="mt-8 text-center text-xs text-gray-500">
+        By continuing, you agree to our <a href="#" class="underline hover:text-gray-600">Terms</a> & <a href="#" class="underline hover:text-gray-600">Privacy Policy</a>.
+    </p>
+</div>
+        
+<div id="view-dashboard" class="view-section max-w-6xl mx-auto animate-fade-in px-2 sm:px-4">
+    
+<div id="dashQuickActions"
+     class="mb-5 md:mb-8 flex flex-col gap-4
+            border-b border-gray-200/70 dark:border-gray-700/60
+            pb-4 md:pb-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+        <div>
+            <h2 class="text-3xl font-extrabold tracking-tight
+                       text-gray-900 dark:text-white">
+                Dashboard
+            </h2>
+            <p class="text-sm font-medium
+                      text-gray-500 dark:text-gray-400 mt-1">
+                Your command center for today.
+            </p>
+        </div>
+
+        <button onclick="app.openTaskModal()"
+                class="hidden sm:flex items-center gap-2
+                       px-5 py-2.5 rounded-xl
+                       bg-primary hover:bg-primary-700
+                       text-white font-bold text-sm
+                       shadow-lg shadow-primary/25 hover:shadow-primary/40
+                       active:scale-95 transition-all">
+            <i class="fas fa-plus"></i>
+            New Task
+        </button>
+    </div>
+
+
+    <div class="flex items-center justify-between gap-3">
+
+
+        <button onclick="app.openBacklogModal()"
+                class="relative flex items-center gap-2
+                       px-4 py-2 rounded-lg
+                       border border-gray-200 dark:border-gray-700
+                       text-xs font-bold
+                       text-gray-600 dark:text-gray-300
+                       hover:bg-gray-50 dark:hover:bg-gray-700/40
+                       transition-all">
+            <i class="fas fa-archive text-gray-400"></i>
+            <span>Backlog</span>
+
+            <span id="dashMiniBacklogCount"
+                  class="absolute -top-2 -right-2
+                         hidden min-w-[18px] h-[18px]
+                         bg-red-500 text-white
+                         text-[10px] font-bold
+                         flex items-center justify-center
+                         rounded-full shadow-sm">
+                0
+            </span>
+        </button>
+
+        <button onclick="app.openTaskModal()"
+                class="sm:hidden flex-1 flex items-center justify-center gap-2
+                       h-11 rounded-xl
+                       bg-primary hover:bg-primary-700
+                       text-white font-bold
+                       shadow-lg shadow-primary/25
+                       active:scale-95 transition-all">
+            <i class="fas fa-plus"></i>
+            New Task
+        </button>
+    </div>
+</div>
+
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <div class="lg:col-span-8 space-y-8">
+            
+            <div id="dashFocusCard"></div>
+
+            <div>
+                <div id="dashOptionalList" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-6">
+            
+            <div class="space-y-4">
+                <div id="dashRealitySnapshot"></div>
+                <div id="dashStrategyCard"></div> </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm space-y-6">
+                
+                <div>
+                    <h4 class="text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-3">Performance</h4>
+                    <div id="dashEffortImpact"></div>
+                </div>
+
+                <div id="dashProgressSection" class="opacity-90 hover:opacity-100 transition-opacity">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex flex-col">
+                             <span id="dashProgressText" class="text-[10px] font-bold uppercase text-gray-500 tracking-widest">Loading...</span>
+                             <span id="dashQualityText" class="text-[10px] font-medium text-indigo-500 hidden mt-0.5"></span>
+                        </div>
+                        <span id="dashProgressPct" class="text-xl font-mono font-bold text-gray-800 dark:text-white">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+                        <div id="dashProgressBar" class="bg-primary h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dashBacklogWhisper" class="hidden bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4 border border-dashed border-gray-200 dark:border-gray-600 text-center">
+                <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-2" id="backlogText">Checking backlog...</p>
+                <button onclick="app.openBacklogModal()" class="text-xs font-bold text-primary hover:text-primary-700 dark:hover:text-primary-400 transition-colors">
+                    Review Bucket <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+
+            <div id="dashCoachFeedback" class="hidden p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800 text-center">
+                <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">Weekly Coach</p>
+                <p id="coachText" class="text-sm font-medium text-indigo-900 dark:text-indigo-200"></p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+        <div id="view-calendar" class="view-section hidden max-w-6xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white">Sprint Calendar</h2>
+                <div class="flex items-center gap-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm p-1.5 border border-gray-200 dark:border-gray-700">
+                    <button onclick="app.changeMonth(-1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500 transition-colors"><i class="fas fa-chevron-left"></i></button>
+                    <span id="calendarMonthLabel" class="font-bold text-sm w-36 text-center select-none text-gray-800 dark:text-gray-200">December</span>
+                    <button onclick="app.changeMonth(1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500 transition-colors"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-4 text-xs font-semibold text-gray-500 dark:text-gray-400 mb-4 px-1">
+                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-white border border-gray-300 dark:border-gray-600 dark:bg-gray-800"></span> Regular</div>
+                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-yellow-100 border border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700"></span> Revision</div>
+                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-purple-100 border border-purple-300 dark:bg-purple-900/30 dark:border-purple-700"></span> Mock Test</div>
+            </div>
+            
+            <div id="calendarGrid" class="calendar-grid select-none">
+                </div>
+        </div>
+
+        <div id="view-subjects" class="view-section hidden max-w-6xl mx-auto pb-20">
+            <div id="subjectsGridView">
+                <div class="flex flex-col mb-8 gap-6">
+                    <div class="text-center w-full">
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white">Curriculum</h2>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">Manage syllabus & steering.</p>
+                    </div>
+
+                    <div class="flex items-center justify-between w-full border-b border-gray-200 dark:border-gray-700 pb-4">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="showArchivedSubjects" onchange="app.renderSubjects()" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer">
+                            <label for="showArchivedSubjects" class="text-xs font-bold text-gray-500 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-300 transition-colors">Show Archived</label>
+                        </div>
+                        
+                        <button onclick="app.openSubjectModal()" class="bg-secondary hover:bg-secondary-600 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-secondary/20 hover:shadow-secondary/40 transition-all flex items-center gap-2 text-sm font-bold active:scale-95">
+                            <i class="fas fa-plus"></i> <span class="hidden sm:inline">New Subject</span><span class="sm:hidden">Add</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="subjectsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </div>
+
+            <div id="subjectFocusPanel" class="hidden animate-fade-in">
+                <div class="sticky top-0 z-20 bg-gray-50/95 dark:bg-dark-bg/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 pb-4 mb-6 pt-2">
+                    <div class="flex items-center gap-4">
+                        <button onclick="window.subjActions.closeFocus()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-500 group">
+                            <i class="fas fa-arrow-left transform group-hover:-translate-x-1 transition-transform"></i>
+                        </button>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-3">
+                                <h2 id="focusPanelTitle" class="text-2xl font-extrabold text-gray-900 dark:text-white truncate"></h2>
+                                <button onclick="window.subjActions.editCurrentSubjectName()" class="text-gray-400 hover:text-primary transition-colors"><i class="fas fa-pencil-alt text-sm"></i></button>
+                            </div>
+                            <p id="focusPanelStats" class="text-xs font-mono text-gray-400 mt-1 truncate"></p>
+                        </div>
+                        <div class="relative hidden sm:block">
+                            <input type="text" id="topicSearch" oninput="window.subjActions.renderFocusList()" placeholder="Filter topics..." class="pl-9 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm w-48 focus:ring-2 focus:ring-primary outline-none transition-all">
+                            <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="sm:hidden mt-3 relative">
+                        <input type="text" id="topicSearchMobile" oninput="document.getElementById('topicSearch').value=this.value; window.subjActions.renderFocusList()" placeholder="Filter topics..." class="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none">
+                        <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-6 flex gap-2">
+                    <input type="text" id="newTopicInput" class="flex-1 bg-transparent border-none focus:ring-0 text-sm px-4 font-medium text-gray-800 dark:text-gray-200" placeholder="Type new topic name and press Enter..." onkeydown="if(event.key==='Enter') window.subjActions.addTopic()">
+                    <button onclick="window.subjActions.addTopic()" class="bg-gray-100 dark:bg-gray-700 hover:bg-primary hover:text-white dark:hover:bg-primary text-gray-600 dark:text-gray-300 px-4 py-1.5 rounded-lg text-xs font-bold transition-all">
+                        ADD
+                    </button>
+                </div>
+
+                <div class="space-y-8">
+                    <div>
+                        <div class="flex justify-between items-end mb-3">
+                            <h3 class="text-xs font-bold uppercase text-gray-400 tracking-wider">
+                                Active Topics <span id="activeTopicCount" class="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded text-[10px]">0</span>
+                            </h3>
+                        </div>
+                        <div id="activeTopicsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-show-all="false">
+                            </div>
+                        <button id="showMoreTopicsBtn" onclick="window.subjActions.showAllTopics()" class="hidden w-full mt-3 py-3 text-xs font-bold text-gray-400 hover:text-primary border border-dashed border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                            Show All Topics
+                        </button>
+                    </div>
+
+                    <div id="archivedTopicsSection" class="hidden pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <button onclick="document.getElementById('archivedTopicsList').classList.toggle('hidden');" class="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-4 w-full group">
+                            <i class="fas fa-archive"></i> Archived Topics (<span id="archivedTopicCount">0</span>) 
+                            <i class="fas fa-chevron-down text-[10px] transform transition-transform group-focus:rotate-180"></i>
+                        </button>
+                        <div id="archivedTopicsList" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 opacity-75">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<div id="view-analytics" class="view-section hidden max-w-6xl mx-auto space-y-6 pb-24">
+    <div class="flex flex-col mb-8 gap-6">
+        <div class="text-center w-full">
+            <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white">Performance Analytics</h2>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">Metrics to optimize your prep.</p>
+        </div>
+        
+        <div class="flex items-center justify-center w-full border-b border-gray-200 dark:border-gray-700 pb-4">
+            <div class="bg-white dark:bg-gray-800 p-1 rounded-xl border border-gray-200 dark:border-gray-700 inline-flex shadow-sm">
+                <button onclick="app.setAnalyticsRange(1)" class="analytics-toggle px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-500 hover:text-primary" id="btnRange1">Today</button>
+                <button onclick="app.setAnalyticsRange(7)" class="analytics-toggle px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-indigo-50 text-primary dark:bg-gray-700 dark:text-white shadow-sm" id="btnRange7">7 Days</button>
+                <button onclick="app.setAnalyticsRange(30)" class="analytics-toggle px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-500 hover:text-primary" id="btnRange30">30 Days</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="analyticsInsightBanner" class="hidden bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-5 text-white shadow-lg shadow-indigo-500/20 animate-fade-in">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 backdrop-blur-sm">
+                <i class="fas fa-lightbulb text-amber-300 text-lg"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-sm uppercase tracking-wider opacity-90 mb-1">Weekly Insight</h4>
+                <p class="font-medium text-lg leading-snug" id="insightText">Analyzing your recent performance...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="analyticsConsistency" class="hidden mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between animate-fade-in">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-primary">
+                <i class="fas fa-heartbeat"></i>
+            </div>
+            <div>
+                <h4 class="text-xs font-bold uppercase text-gray-400 tracking-wider">Study Rhythm</h4>
+                <p class="text-sm font-bold text-gray-800 dark:text-gray-200" id="consistencyText">Calculating...</p>
+            </div>
+        </div>
+        <div class="flex gap-1" id="consistencyVisuals"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-soft border border-gray-200 dark:border-gray-700 relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 text-primary opacity-5 group-hover:opacity-10 transition-opacity"><i class="fas fa-clock text-6xl"></i></div>
+            <h3 class="text-gray-400 text-xxs uppercase font-bold tracking-widest z-10 mb-1">Study Time</h3>
+            <div class="flex items-baseline gap-2">
+                <div class="text-4xl font-extrabold text-gray-800 dark:text-white z-10" id="analyticsTotalHours">0h</div>
+                <span class="text-xs font-bold text-gray-400" id="analyticsTimeLabel">total</span>
+            </div>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-soft border border-gray-200 dark:border-gray-700 relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 text-accent opacity-5 group-hover:opacity-10 transition-opacity"><i class="fas fa-brain text-6xl"></i></div>
+            <h3 class="text-gray-400 text-xxs uppercase font-bold tracking-widest z-10 mb-1">Focus Quality</h3>
+            <div class="flex items-baseline gap-2">
+                <div class="text-4xl font-extrabold text-accent z-10" id="analyticsAvgFocus">0.0</div>
+                <span class="text-xs font-bold text-gray-400">/ 5.0</span>
+            </div>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-soft border border-gray-200 dark:border-gray-700 relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 text-secondary opacity-5 group-hover:opacity-10 transition-opacity"><i class="fas fa-check-circle text-6xl"></i></div>
+            <h3 class="text-gray-400 text-xxs uppercase font-bold tracking-widest z-10 mb-1">Completion Rate</h3>
+            <div class="flex items-baseline gap-2">
+                <div class="text-4xl font-extrabold text-secondary z-10" id="analyticsCompletion">0%</div>
+                <span class="text-xs font-bold text-gray-400">success</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-soft border border-gray-200 dark:border-gray-700">
+            <h3 class="text-sm font-bold mb-6 text-gray-800 dark:text-gray-100 uppercase tracking-wider flex items-center gap-2">
+                <i class="fas fa-chart-bar text-primary"></i> Subject Distribution
+            </h3>
+            
+            <div id="analyticsSubjectBars" class="space-y-5">
+                </div>
+
+            <div id="analyticsReflection" class="hidden mt-8 max-w-4xl mx-auto">
+                <h3 class="text-center text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Weekly Reflection</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700 text-center">
+                        <i class="fas fa-calendar-check text-emerald-500 mb-2"></i>
+                        <p class="text-xs font-medium text-gray-600 dark:text-gray-300" id="refConsistency">...</p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700 text-center">
+                        <i class="fas fa-balance-scale text-blue-500 mb-2"></i>
+                        <p class="text-xs font-medium text-gray-600 dark:text-gray-300" id="refBalance">...</p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700 text-center">
+                        <i class="fas fa-clock text-purple-500 mb-2"></i>
+                        <p class="text-xs font-medium text-gray-600 dark:text-gray-300" id="refTiming">...</p>
+                    </div>
+                </div>
+            </div>
+                
+            <div id="analyticsDrillPanel" class="hidden fixed inset-0 z-20 bg-gray-50 dark:bg-dark-bg sm:static sm:bg-transparent sm:dark:bg-transparent sm:z-auto flex flex-col h-full sm:h-auto animate-fade-in">
+                <div class="flex items-center gap-4 mb-6 pt-4 sm:pt-0">
+                    <button onclick="app.closeAnalyticsDrill()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-500 shadow-sm">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div>
+                        <h3 class="text-xl font-extrabold text-gray-900 dark:text-white" id="drillSubjectTitle">Subject Analysis</h3>
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Topic-wise performance & retention.</p>
+                    </div>
+                </div>
+                
+                <div id="drillInsightBanner" class="mb-6 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-4 text-white shadow-lg shadow-blue-500/20 hidden">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-brain mt-1 opacity-80"></i>
+                        <div>
+                            <span class="text-[10px] uppercase font-bold tracking-wider opacity-90 block mb-0.5">Focus Insight</span>
+                            <p class="text-sm font-bold" id="drillInsightText">Analyzing focus patterns...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-soft overflow-hidden flex-1">
+                    <div class="overflow-y-auto max-h-[60vh] custom-scrollbar p-1">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50/50 dark:bg-gray-700/30 sticky top-0 z-10 backdrop-blur-sm">
+                                <tr>
+                                    <th class="p-4 text-[10px] font-bold uppercase text-gray-400 tracking-wider">Topic / Chapter</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase text-gray-400 tracking-wider text-right">Stats</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase text-gray-400 tracking-wider text-right hidden sm:table-cell">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="drillTopicList" class="divide-y divide-gray-100 dark:divide-gray-700">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div id="cardStrongSubject" class="hidden bg-emerald-50 dark:bg-emerald-900/10 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm"><i class="fas fa-fire"></i></div>
+                    <div class="text-xs font-bold uppercase text-emerald-700 dark:text-emerald-500 tracking-wider">Power Subject</div>
+                </div>
+                <h4 class="text-xl font-extrabold text-gray-800 dark:text-gray-100 mb-1" id="lblStrongSub">History</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Most consistent focus & time.</p>
+            </div>
+
+            <div id="cardWeakSubject" class="hidden bg-red-50 dark:bg-red-900/10 p-5 rounded-2xl border border-red-100 dark:border-red-900/30">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/50 text-red-500 flex items-center justify-center text-sm"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="text-xs font-bold uppercase text-red-700 dark:text-red-400 tracking-wider">Needs Attention</div>
+                </div>
+                <h4 class="text-xl font-extrabold text-gray-800 dark:text-gray-100 mb-1" id="lblWeakSub">Polity</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Low completion or focus.</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-soft border border-gray-200 dark:border-gray-700 h-auto">
+                <h3 class="text-xs font-bold mb-4 text-gray-400 uppercase tracking-widest">Coach's Corner</h3>
+                <div id="analyticsSuggestions" class="space-y-3">
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    </main>
+</div>
+
+<div id="globalTimerBar" class="fixed left-0 w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] z-40 transform translate-y-full transition-transform duration-300 px-3 md:px-8 py-2 md:py-3 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 md:gap-0 bottom-16 md:bottom-0 min-h-[80px] md:min-h-0 pb-safe">
+    <div class="flex items-center gap-3 md:gap-4 flex-1 min-w-0 w-full">
+        <div class="relative shrink-0">
+            <div class="w-3 h-3 rounded-full bg-secondary animate-pulse"></div>
+            <div class="absolute inset-0 w-3 h-3 rounded-full bg-secondary animate-ping opacity-75"></div>
+        </div>
+        <div class="flex flex-col min-w-0">
+            <div class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold">In Progress</div>
+            <div id="globalTimerTaskName" class="text-sm font-bold text-gray-900 dark:text-gray-100 truncate pr-0 md:pr-4">History</div>
+        </div>
+    </div>
+    
+    <div class="flex items-center justify-between md:justify-end gap-0 md:gap-8 shrink-0 w-full md:w-auto mt-1 md:mt-0">
+        <div id="globalTimerDisplay" class="font-mono text-2xl md:text-3xl font-bold text-primary tracking-widest tabular-nums leading-none">00:00:00</div>
+        <div class="flex gap-2">
+            <button onclick="app.toggleTimer()" id="globalTimerPauseBtn" class="bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50 px-3 md:px-4 py-2 rounded-lg font-bold text-xs md:text-sm transition-colors uppercase tracking-wide">Pause</button>
+            <button onclick="app.stopTimer()" class="bg-red-500 text-white hover:bg-red-600 px-3 md:px-4 py-2 rounded-lg font-bold text-xs md:text-sm shadow-md shadow-red-500/30 transition-colors uppercase tracking-wide">Stop</button>
+        </div>
+    </div>
+</div>
+
+<div id="settingsModal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-200 dark:border-gray-700 transform transition-all scale-100">
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-700/30">
+            <h3 class="text-base font-bold text-gray-800 dark:text-white">Settings & Data</h3>
+            <button onclick="app.closeModal('settingsModal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"><i class="fas fa-times"></i></button>
+        </div>
+       <div class="p-6 space-y-5">
+    
+    <div id="backupHealthPanel" class="p-4 rounded-xl border transition-colors duration-300">
+        <div class="flex items-center gap-3 mb-2">
+            <i id="backupStatusIcon" class="fas fa-circle-notch text-lg"></i>
+            <div class="flex-1">
+                <h4 id="backupStatusTitle" class="font-bold text-sm leading-none">Checking status...</h4>
+                <p id="backupStatusText" class="text-xs opacity-75 mt-1 font-medium">Please wait</p>
+            </div>
+        </div>
+        <p class="text-[10px] opacity-60 mt-2 pt-2 border-t border-black/5 dark:border-white/5 leading-relaxed">
+            <i class="fas fa-shield-alt mr-1"></i> Regular exports protect your study plan.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+        <button onclick="app.exportData()" class="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 border border-gray-200 dark:border-gray-600 hover:border-primary/50 rounded-xl transition-all group">
+            <i class="fas fa-download text-xl mb-2 text-gray-400 group-hover:text-primary transition-colors"></i>
+            <span class="text-xs font-bold text-gray-700 dark:text-gray-200">Export Now</span>
+        </button>
+
+        <button onclick="document.getElementById('importFile').click()" class="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 border border-gray-200 dark:border-gray-600 hover:border-secondary/50 rounded-xl transition-all group">
+            <i class="fas fa-file-upload text-xl mb-2 text-gray-400 group-hover:text-secondary transition-colors"></i>
+            <span class="text-xs font-bold text-gray-700 dark:text-gray-200">Import File</span>
+        </button>
+        <input type="file" id="importFile" class="hidden" accept=".json" onchange="app.importData(this)">
+    </div>
+
+    <button onclick="app.restoreSafetyBackup()" class="w-full py-3 text-xs font-bold text-amber-600 dark:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/10 rounded-xl transition-colors border border-dashed border-amber-200 dark:border-amber-800/50 flex items-center justify-center gap-2">
+        <i class="fas fa-history"></i> Restore Last Safety Backup
+    </button>
+</div>
+    </div>
+</div>
+
+<div id="taskModal" class="modal fixed inset-0 z-50 hidden flex items-end md:items-center justify-center p-0 md:p-4 bg-black/60 backdrop-blur-sm">
+    
+    <div class="bg-white dark:bg-gray-800 w-full max-w-5xl rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden flex flex-col fixed bottom-0 h-[85dvh] md:relative md:bottom-auto md:h-auto md:max-h-[85vh] transform transition-transform duration-300">
+        
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/80 dark:bg-gray-700/30 backdrop-blur-md shrink-0">
+            <div class="flex items-center gap-3">
+                <button id="tmMobileBackBtn" onclick="app.toggleMobileTaskView('list')" class="hidden w-8 h-8 items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors md:hidden">
+                    <i class="fas fa-arrow-left text-gray-500 dark:text-gray-300"></i>
+                </button>
+                
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white tracking-tight" id="taskModalTitle">Day Manager</h3>
+            </div>
+            
+            <button onclick="app.closeModal('taskModal')" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-300 transition-colors">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <div class="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden relative">
+            
+            <div id="tmListPane" class="flex-1 flex flex-col min-h-0 bg-gray-50/50 dark:bg-gray-900/50 relative overflow-y-auto custom-scrollbar md:order-1 w-full">
+                
+                <div class="px-6 py-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-100 dark:border-gray-700 shrink-0">
+                    <div class="flex justify-between items-end mb-1.5">
+                        <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Capacity</span>
+                        <span class="text-[10px] font-bold text-gray-800 dark:text-gray-200 font-mono" id="dailyLoadText">0h</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                        <div id="dailyLoadBar" class="bg-secondary h-1.5 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]" style="width: 0%"></div>
+                    </div>
+                    <div id="dailyLoadWarning" class="hidden text-[10px] text-red-500 font-bold mt-1 text-right animate-pulse">⚠️ Overload Warning</div>
+                </div>
+
+                <div class="p-4 space-y-3 pb-24 md:pb-4">
+                    <div id="dayManagerList" class="space-y-2.5">
+                        </div>
+                    
+                    <div id="smartRevisionSection" class="hidden bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl border border-amber-100 dark:border-amber-800/50 mt-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400 text-xs shrink-0">
+                                    <i class="fas fa-lightbulb"></i>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] font-bold text-amber-900 dark:text-amber-300 block uppercase tracking-wider">Smart Review</span>
+                                    <span class="text-[10px] text-amber-700 dark:text-amber-500 block leading-tight">Auto-suggests topics.</span>
+                                </div>
+                            </div>
+                            <button onclick="app.loadRevisionTopics()" class="text-[10px] bg-amber-500 text-white px-3 py-1.5 rounded-lg hover:bg-amber-600 font-bold shadow-sm transition-colors whitespace-nowrap">
+                                Load
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:hidden absolute bottom-6 right-6 z-20">
+                    <button onclick="app.toggleMobileTaskView('form')" class="w-14 h-14 bg-primary text-white rounded-full shadow-xl flex items-center justify-center text-xl shadow-primary/30 active:scale-95 transition-transform hover:bg-primary-700">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="tmFormPane" class="hidden md:flex w-full md:w-80 lg:w-96 bg-white dark:bg-gray-800 border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-700 shrink-0 z-30 shadow-[-4px_0_20px_rgba(0,0,0,0.05)] md:order-2 flex-col h-full pb-safe">
+                
+                <form onsubmit="app.saveTask(event)" class="p-5 md:p-6 flex-1 overflow-y-auto pb-8 md:pb-6">
+                    <div class="flex justify-between items-center mb-5">
+                         <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2" id="formModeTitle">
+                            <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span> Plan New Task
+                         </h4>
+                         <button type="button" onclick="app.resetForm(); app.renderDayManagerList(document.getElementById('taskDate').value);" class="text-[10px] bg-red-50 text-red-500 px-2 py-1 rounded border border-red-100 hover:bg-red-100 font-bold hidden transition-colors" id="cancelEditBtn">CANCEL EDIT</button>
+                    </div>
+
+                    <input type="hidden" id="taskEditId" value="">
+
+                    <div class="space-y-4">
+                        <div class="group relative">
+                            <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Subject</label>
+                            <div class="relative">
+                                <select id="taskSubject" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none appearance-none font-medium transition-shadow pr-8" required onchange="app.updateSubSubjects()">
+                                    <option value="">Select Subject</option>
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-3 top-3.5 text-gray-400 pointer-events-none text-xs"></i>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Topic / Chapter</label>
+                            <input list="subSubjectList" id="taskSubSubject" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none font-medium transition-shadow" placeholder="e.g. Mughal Empire" required autocomplete="off">
+                            <datalist id="subSubjectList"></datalist>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3">
+                             <div class="col-span-1">
+                                <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Duration</label>
+                                <div class="relative">
+                                    <input type="number" id="taskDuration" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none font-medium transition-shadow" placeholder="Min" required>
+                                    <span class="absolute right-2 top-3.5 text-[10px] text-gray-400 font-bold pointer-events-none">m</span>
+                                </div>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Notes</label>
+                                <input type="text" id="taskDesc" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none font-medium transition-shadow" placeholder="Optional details">
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="date" id="taskDate" class="hidden" required>
+
+                    <button type="submit" id="saveTaskBtn" class="w-full mt-6 py-3.5 bg-primary text-white rounded-xl hover:bg-primary-700 font-bold text-sm transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 transform active:scale-[0.98]">Add to Schedule</button>
+                    
+                    <div class="md:hidden mt-4 text-center">
+                        <button type="button" onclick="app.toggleMobileTaskView('list')" class="text-xs text-gray-500 font-medium underline">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="completeModal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center border border-gray-100 dark:border-gray-700">
+        <div class="w-16 h-16 bg-secondary/10 text-secondary rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+            <i class="fas fa-stopwatch"></i>
+        </div>
+        <h3 class="text-xl font-extrabold mb-2 text-gray-900 dark:text-white">Session Stopped</h3>
+        <p class="text-sm text-gray-500 mb-8">Log your actual performance.</p>
+        
+        <div class="mb-6 text-left">
+             <label class="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Time Spent (Minutes)</label>
+             <input type="number" id="actualTimeInput" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl p-4 font-mono text-center text-2xl font-bold focus:ring-2 focus:ring-secondary outline-none">
+        </div>
+
+        <div class="mb-8 text-left">
+            <label class="block text-xs font-bold uppercase text-gray-400 mb-3 tracking-wider">Focus Level</label>
+            <input type="range" min="1" max="5" value="3" id="focusScore" class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary">
+            <div class="flex justify-between px-1 mt-2 text-[10px] font-bold text-gray-400 uppercase">
+                <span>Distracted</span>
+                <span>Flow State</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-3">
+            <button onclick="app.confirmCompletion('done')" class="w-full px-4 py-3 bg-secondary hover:bg-secondary-600 text-white rounded-xl font-bold shadow-lg shadow-secondary/20 transition-all flex items-center justify-center gap-2">
+                <i class="fas fa-check"></i> Mark Fully Complete
+            </button>
+            <button onclick="app.confirmCompletion('partial')" class="w-full px-4 py-3 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 font-bold transition-all flex items-center justify-center gap-2">
+                <i class="fas fa-hourglass-half"></i> Log & Continue Later
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="subjectModal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100 dark:border-gray-700">
+        <h3 class="text-xl font-bold mb-6 text-gray-900 dark:text-white">Add New Subject</h3>
+        <form onsubmit="app.saveSubject(event)">
+            <div class="mb-6">
+                <label class="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">Subject Name</label>
+                <input type="text" id="newSubjectName" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl p-3 focus:ring-2 focus:ring-primary focus:border-primary outline-none font-medium" placeholder="e.g. Economics" required>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="app.closeModal('subjectModal')" class="px-5 py-2.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl font-medium text-sm transition-colors">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-700 font-bold text-sm shadow-lg shadow-primary/20 transition-all">Create Subject</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="uiDialogContainer" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-200 dark:border-gray-700 transform transition-all scale-100 p-6 flex flex-col gap-4">
+         <h3 id="uiDialogTitle" class="text-lg font-bold text-gray-900 dark:text-white"></h3>
+         <p id="uiDialogMessage" class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap"></p>
+         <input type="text" id="uiDialogInput" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none font-medium hidden">
+         <div id="uiDialogButtons" class="flex justify-end gap-3 mt-2"></div>
+    </div>
+</div>
+<div id="importPreviewModal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100 dark:border-gray-700 transform transition-all scale-100">
+        <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+            <i class="fas fa-file-import text-primary"></i> Backup Preview
+        </h3>
+        
+        <div class="space-y-3 mb-6">
+            <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Tasks</span>
+                <span class="font-mono font-bold text-gray-800 dark:text-gray-200" id="previewTaskCount">0</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Subjects</span>
+                <span class="font-mono font-bold text-gray-800 dark:text-gray-200" id="previewSubCount">0</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Date Range</span>
+                <span class="font-mono font-bold text-gray-800 dark:text-gray-200 text-xs" id="previewDateRange">-</span>
+            </div>
+        </div>
+
+        <div class="text-[10px] text-amber-700 dark:text-amber-500 font-bold bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl mb-6 border border-amber-100 dark:border-amber-900/30 flex gap-3 items-start">
+            <i class="fas fa-exclamation-triangle mt-0.5 text-base"></i>
+            <div>
+                <span class="block uppercase tracking-wider mb-0.5 opacity-75">Caution</span>
+                This action will replace your current data. A safety backup will be created automatically.
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <button id="btnPreviewCancel" class="px-4 py-3 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors">Cancel</button>
+            <button id="btnPreviewConfirm" class="px-4 py-3 bg-primary text-white rounded-xl hover:bg-primary-700 font-bold text-xs uppercase tracking-wider shadow-lg shadow-primary/20 transition-all">Confirm Import</button>
+        </div>
+    </div>
+</div>
+<div id="zenModeOverlay" class="hidden fixed inset-0 z-[60] bg-gray-900 text-white flex flex-col transition-opacity duration-300">
+    <div class="px-6 py-6 flex justify-between items-center">
+        <button onclick="app.toggleZenMode()" class="p-4 rounded-full hover:bg-white/10 transition-colors group">
+            <i class="fas fa-chevron-down text-2xl text-gray-400 group-hover:text-white transition-colors"></i>
+        </button>
+        <div class="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">Focus Mode</div>
+        <div class="w-12"></div> </div>
+
+    <div class="flex-1 flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+        <div class="mb-8 space-y-2">
+            <span id="zenSubject" class="inline-block px-3 py-1 rounded-lg border border-gray-700 bg-gray-800 text-xs font-bold uppercase tracking-wider text-primary-500 mb-4">Subject</span>
+            <h2 id="zenTaskName" class="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight text-white max-w-4xl mx-auto">
+                Task Name
+            </h2>
+        </div>
+
+        <div id="zenTimerDisplay" class="font-mono text-[15vw] md:text-[12rem] font-bold tracking-tighter leading-none text-white tabular-nums select-none drop-shadow-2xl">
+            00:00:00
+        </div>
+
+        <p class="mt-8 text-gray-400 text-sm font-medium animate-pulse">
+            <i class="fas fa-circle text-[10px] text-red-500 mr-2"></i>Session Active
+        </p>
+    </div>
+
+    <div class="px-6 py-12 md:py-16 flex justify-center items-center gap-8 md:gap-12">
+        <button onclick="app.toggleTimer()" id="zenPauseBtn" class="flex flex-col items-center gap-2 group min-w-[80px]">
+            <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gray-800 border border-gray-700 group-hover:bg-gray-700 group-hover:border-gray-600 flex items-center justify-center transition-all shadow-lg">
+                <i class="fas fa-pause text-2xl md:text-3xl text-amber-400"></i>
+            </div>
+            <span class="text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-gray-300">Pause</span>
+        </button>
+
+        <button onclick="app.stopTimer()" class="flex flex-col items-center gap-2 group min-w-[80px]">
+            <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-red-500/10 border border-red-500/20 group-hover:bg-red-600 group-hover:border-red-600 flex items-center justify-center transition-all shadow-lg shadow-red-900/20">
+                <i class="fas fa-stop text-2xl md:text-3xl text-red-500 group-hover:text-white"></i>
+            </div>
+            <span class="text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-gray-300">Finish</span>
+        </button>
+    </div>
+</div>
+<div id="backlogModal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col max-h-[80vh]">
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-700/30 shrink-0">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                <i class="fas fa-inbox text-gray-400"></i> Backlog Bucket
+            </h3>
+            <button onclick="app.closeModal('backlogModal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 w-8 h-8 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="backlogModalList" class="p-4 overflow-y-auto space-y-2 custom-scrollbar flex-1 bg-gray-50 dark:bg-dark-bg">
+            </div>
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0">
+            <button onclick="app.closeModal('backlogModal')" class="w-full py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm">Close</button>
+        </div>
+    </div>
+</div>
+<div id="authModal" class="modal fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100 dark:border-gray-700 relative">
+        <button onclick="document.getElementById('authModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i class="fas fa-times"></i></button>
+        
+        <div class="text-center mb-6">
+            <h3 class="text-2xl font-extrabold text-gray-900 dark:text-white mb-1">Scholar Login</h3>
+            <p class="text-sm text-gray-500">Sync your progress across devices.</p>
+        </div>
+
+        <button onclick="app.loginGoogle()" class="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center justify-center gap-3 mb-6 group">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Sign in with Google">
+            <span class="font-bold text-sm text-gray-700 dark:text-gray-200 group-hover:text-black dark:group-hover:text-white">Continue with Google</span>
+        </button>
+
+        <div class="relative flex py-2 items-center mb-6">
+            <div class="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
+            <span class="flex-shrink-0 mx-4 text-[10px] text-gray-400 uppercase tracking-widest font-bold">Or Email</span>
+            <div class="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
+        </div>
+
+        <form onsubmit="event.preventDefault(); app.handleEmailAuth(event);" class="space-y-4">
+            <input type="email" name="email" placeholder="Email Address" required class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary outline-none">
+            <input type="password" name="password" placeholder="Password" required class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary outline-none">
+            
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <button type="submit" onclick="this.form.dataset.action='login'" class="py-2.5 bg-primary text-white rounded-xl font-bold text-xs hover:bg-primary-700 transition-colors">Log In</button>
+                <button type="submit" onclick="this.form.dataset.action='register'" class="py-2.5 bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-300 rounded-xl font-bold text-xs hover:bg-indigo-100 transition-colors">Sign Up</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="module" src="./js/app.js"></script>
+</body> </html>
